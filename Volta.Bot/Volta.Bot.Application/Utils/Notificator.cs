@@ -1,0 +1,110 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Telegram.Bot.Types;
+
+namespace Volta.Bot.Application.Utils
+{
+    public static class Notificator
+    {
+        private static readonly List<Action<string>> ActiveNotificationTypes = new List<Action<string>>
+        {
+            WriteToConsole,
+            WriteToFile
+        };
+
+        public static void ConvertingReceiveStarted()
+        {
+            SendNotification("Converting receive is started!");
+        }
+        public static void ConnectingRecognizeModels()
+        {
+            SendNotification("Connecting Recognize Model");
+        }
+        
+
+        public static void ConvertingReceiveStopped()
+        {
+            SendNotification("Converting receive is stopped!");
+        }
+
+        public static void ResourceSendSuccess(Message message, string caption)
+        {
+            SendNotification($"Send to chat: {message.Chat.Title}\n" +
+                             $"Caption: {caption}\n" +
+                             $"Replied to message: {message.MessageId}");
+        }
+
+        public static void ResourceHandled(Message message, long size)
+        {
+            SendNotification($"Handled {message.Type}\n" +
+                             $"Chat: {message.Chat.Title}\n" +
+                             $"FileSize: {size}\n" +
+                             $"Description: {message.Caption}");
+        }
+
+        public static void ResourceConverted(Message message, long originalLength, long resultLength)
+        {
+            SendNotification($"{message.Type} converted!\n" +
+                             $"Original File Size: {originalLength}\n" +
+                             $"Result File Size: {resultLength}");
+        }
+
+        public static void VoiceSendSuccess(Message message, string caption)
+        {
+            SendNotification($"Send to chat: {message.Chat.Title}\n" +
+                             $"Caption: {caption}\n" +
+                             $"Replied to message: {message.MessageId}");
+        }
+
+        public static void VoiceHandled(Message message)
+        {
+            SendNotification("Handled Audio\n" +
+                             $"Chat: {message.Chat.Title}\n" +
+                             $"FileSize: {message.Voice.FileSize}\n" +
+                             $"Description: {message.Caption}");
+        }
+
+        public static void VoiceConverted(Message message, long resultLength)
+        {
+            SendNotification("Audio converted!\n" +
+                             $"Original File Size: {message.Voice.FileSize}\n" +
+                             $"Result Text Length: {resultLength}");
+        }
+
+        public static void DirectTextMessage(Message message, string messageToClient)
+        {
+            SendNotification("New Direct Message!\n" +
+                             $"From: {message?.From?.Username} ({message?.GetFromFullName(false)})\n" +
+                             $"Response: {messageToClient}\n" +
+                             message.Text);
+        }
+
+        public static void Error(string message)
+        {
+            SendNotification(message);
+        }
+
+        #region Notification Type Settings
+
+        private static void SendNotification(string message)
+        {
+            ActiveNotificationTypes.ForEach(t => t.Invoke(message));
+        }
+
+        private static void WriteToConsole(string message)
+        {
+            Console.WriteLine(Header + message);
+        }
+
+        private static void WriteToFile(string message)
+        {
+            using var file = new StreamWriter("messages_log.txt", true);
+            file.WriteLine(Header + message);
+        }
+
+        private static string Header => $"\n------------------- {DateTime.Now:U} -------------------\n";
+
+        #endregion
+    }
+}
