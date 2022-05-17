@@ -18,10 +18,12 @@ namespace Volta.Bot.Infrastructure.Converters
         protected abstract string GetConversionParams(string filePath, string watermarkPath, string outputPath, 
             int mainFileWidth, int mainFileHeight, double scaleRatio);
 
+        protected abstract string GetExtension();
+
         public async Task<Stream> ConvertAsync(string filePath)
         {
             var tempFile = Path.GetTempFileName();
-            var outputPath = Path.ChangeExtension(tempFile, ".jpg");
+            var outputPath = Path.ChangeExtension(tempFile, GetExtension());
 
             var ms = new MemoryStream();
 
