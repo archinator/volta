@@ -4,7 +4,7 @@ using Xabe.FFmpeg;
 
 namespace Volta.Bot.Infrastructure.Converters
 {
-    public class ResourceConverter : IResourceConverter
+    public abstract class ResourceConverter : IResourceConverter
     {
         private const double MainFileToWatermarkRatio = 4;
         private const int DefaultWatermarkHeight = 110;
@@ -14,6 +14,9 @@ namespace Volta.Bot.Infrastructure.Converters
         {
             _logger = logger;
         }
+
+        protected abstract string GetConversionParams(string filePath, string watermarkPath, string outputPath, 
+            int mainFileWidth, int mainFileHeight, double scaleRatio);
 
         public async Task<Stream> ConvertAsync(string filePath)
         {
@@ -34,9 +37,7 @@ namespace Volta.Bot.Infrastructure.Converters
                 _logger.LogInformation("Start conversion. Output: " + outputPath);
 
                 var result = await FFmpeg.Conversions.New()
-                    .Start($"-i \"{filePath}\" -i \"{watermarkPath}\" -s {mainFileWidth}x{mainFileHeight} "
-                    + $"-filter_complex \"[1]scale=iw*{scaleRatio}:-1[wm];[0][wm]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2\" "
-                    + $"-map 0:1? -map 1:1? -map 0:0? -n \"{outputPath}\"");
+                    .Start(GetConversionParams(filePath, watermarkPath, outputPath, mainFileWidth, mainFileHeight, scaleRatio));
 
                 _logger.LogInformation($"Conversion finished. Duration: {result.Duration}");
 

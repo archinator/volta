@@ -80,11 +80,11 @@ namespace Volta.Bot.ConsoleApp
 
         public IResourceHandler GetResourceHandlerByMessageType(Message message) => message.Type switch
         {
-            MessageType.Photo => new PhotoHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId, 
+            MessageType.Photo => new PhotoHandler(_client, new PhotoConverter(_resourceConverterLogger), _settings, _botId, 
                 message.GetPhotoWithBestResolution().FileSize, message.GetPhotoWithBestResolution().FileId, _resourceHandlerLogger),
-            MessageType.Video => new VideoHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId,
+            MessageType.Video => new VideoHandler(_client, new VideoConverter(_resourceConverterLogger), _settings, _botId,
                 message.Video.FileSize, message.Video.FileId, _resourceHandlerLogger),
-            MessageType.Document => new DocumentHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId,
+            MessageType.Document => new DocumentHandler(_client, new DocumentConverter(_resourceConverterLogger), _settings, _botId,
                 message.Document.FileSize, message.Document.FileId, _resourceHandlerLogger),
             _ => new DefaultHandler(_defaultHandlerLogger),
         };
