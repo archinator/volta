@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Volta.Bot.Application.Interfaces;
 using Xabe.FFmpeg;
 
@@ -20,7 +15,7 @@ namespace Volta.Bot.Infrastructure.Converters
             _logger = logger;
         }
 
-        public async Task<Stream> ConvertAsync(string filePath, int? width = null, int? height = null)
+        public async Task<Stream> ConvertAsync(string filePath)
         {
             var tempFile = Path.GetTempFileName();
             var outputPath = Path.ChangeExtension(tempFile, ".jpg");
@@ -31,7 +26,8 @@ namespace Volta.Bot.Infrastructure.Converters
             {
                 var mediaInfo = await FFmpeg.GetMediaInfo(filePath);
                 var watermarkPath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "volta.png");
-                var (mainFileWidth, mainFileHeight) = (width ?? 1280, height ?? 768);
+                var vStream = mediaInfo.VideoStreams.FirstOrDefault();
+                var (mainFileWidth, mainFileHeight) = (vStream?.Width ?? 1280, vStream?.Height ?? 768);
                 var scaleRatio = await GetWatermarkScaleRatio(watermarkPath, Math.Max(mainFileWidth, mainFileHeight));
 
                 _logger.LogInformation($"Scale ratio: {scaleRatio}");

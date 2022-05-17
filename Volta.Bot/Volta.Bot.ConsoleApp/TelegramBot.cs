@@ -4,15 +4,11 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InputFiles;
-using Volta.Bot.Application.Domain;
 using Volta.Bot.Application.Interfaces;
 using Volta.Bot.Application.Settings;
 using Volta.Bot.Application.Utils;
 using Volta.Bot.Infrastructure.Converters;
 using Volta.Bot.Infrastructure.ResourceHandlers;
-using Xabe.FFmpeg;
-using File = System.IO.File;
 
 namespace Volta.Bot.ConsoleApp
 {
@@ -21,28 +17,28 @@ namespace Volta.Bot.ConsoleApp
     public sealed class TelegramBot : IDisposable
     {
         private readonly TelegramBotClient _client;
-        private readonly IMediaConverter _mediaСonverter;
         private readonly BotSettings _settings;
         private readonly ILogger<TelegramBot> _logger;
         private readonly ILogger<ResourceHandler> _resourceHandlerLogger;
         private readonly ILogger<DefaultHandler> _defaultHandlerLogger;
+        private readonly ILogger<ResourceConverter> _resourceConverterLogger;
 
         private long _botId;
 
         public event NewContentHandler FileUploaded;
 
         public TelegramBot(
-            BotSettings settings, 
-            IMediaConverter xabeConverter,
+            BotSettings settings,
             ILogger<TelegramBot> logger,
             ILogger<ResourceHandler> resourceHandlerLogger,
-            ILogger<DefaultHandler> defaultHandlerLogger)
+            ILogger<DefaultHandler> defaultHandlerLogger,
+            ILogger<ResourceConverter> resourceConverterLogger)
         {
             _settings = settings;
-            _mediaСonverter = xabeConverter;
             _logger = logger;
             _resourceHandlerLogger = resourceHandlerLogger;
             _defaultHandlerLogger = defaultHandlerLogger;
+            _resourceConverterLogger = resourceConverterLogger;
 
             _logger.LogInformation("Starting Telegram Bot");
 
@@ -84,11 +80,11 @@ namespace Volta.Bot.ConsoleApp
 
         public IResourceHandler GetResourceHandlerByMessageType(Message message) => message.Type switch
         {
-            MessageType.Photo => new PhotoHandler(_client, new PhotoConverter(), _settings, _botId, 
+            MessageType.Photo => new PhotoHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId, 
                 message.GetPhotoWithBestResolution().FileSize, message.GetPhotoWithBestResolution().FileId, _resourceHandlerLogger),
-            MessageType.Video => new VideoHandler(_client, new VideoConverter(), _settings, _botId,
+            MessageType.Video => new VideoHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId,
                 message.Video.FileSize, message.Video.FileId, _resourceHandlerLogger),
-            MessageType.Document => new DocumentHandler(_client, new DocumentConverter(), _settings, _botId,
+            MessageType.Document => new DocumentHandler(_client, new ResourceConverter(_resourceConverterLogger), _settings, _botId,
                 message.Document.FileSize, message.Document.FileId, _resourceHandlerLogger),
             _ => new DefaultHandler(_defaultHandlerLogger),
         };
