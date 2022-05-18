@@ -56,21 +56,30 @@ namespace Volta.Bot.Infrastructure.ResourceHandlers
                 var inputFile = new InputOnlineFile(resourceStream, _settings.ResultFileName);
                 await SendResourceAsync(message.Chat.Id, message.MessageId, inputFile, caption);
 
-                var chatAdmins = await Client.GetChatAdministratorsAsync(message.Chat.Id);
-                var isBotAdmin = chatAdmins.Any(ca => ca.Status == ChatMemberStatus.Administrator && ca.User.Id == _botId);
-                if (isBotAdmin)
-                {
-                    await Client.DeleteMessageAsync(message.Chat.Id, message.MessageId);
-                }
-
+                await TryDeleteMessageAsync(message);
                 Notificator.ResourceSendSuccess(message, caption);
             }
             catch (Exception exc)
             {
-                _logger.LogError(exc, $"Failed to convert resource. Message: {message.MessageId}");
+                _logger.LogError(exc, $"Failed to convert resource. Message id: {message.MessageId}. Exception details: {exc.Message}");
                 await Client.SendTextMessageAsync(message.Chat.Id,
                     $"{message.GetFromFirstName()}, conversion failed",
                     replyToMessageId: message?.MessageId);
+            }
+        }
+
+        private async Task TryDeleteMessageAsync(Message message)
+        {
+            if (message.Chat.Type == ChatType.Private)
+            {
+                return;
+            }
+            
+            var chatAdmins = await Client.GetChatAdministratorsAsync(message.Chat.Id);
+            var isBotAdmin = chatAdmins.Any(ca => ca.Status == ChatMemberStatus.Administrator && ca.User.Id == _botId);
+            if (isBotAdmin)
+            {
+                await Client.DeleteMessageAsync(message.Chat.Id, message.MessageId);
             }
         }
     }
