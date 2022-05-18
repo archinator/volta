@@ -68,13 +68,20 @@ namespace Volta.Bot.ConsoleApp
 
         async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            if (update.Message is Message message)
+            try
             {
-                //if (message.ForwardFrom != null) return;
+                if (update.Message is Message message)
+                {
+                    //if (message.ForwardFrom != null) return;
 
-                _logger.LogInformation($"User {message.GetFromFullName()} initiated message {message.MessageId}");
-                var resourceHandler = GetResourceHandlerByMessageType(message);
-                await resourceHandler.Handle(message);
+                    _logger.LogInformation($"User {message.GetFromFullName()} initiated message {message.MessageId}");
+                    var resourceHandler = GetResourceHandlerByMessageType(message);
+                    await resourceHandler.Handle(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Fatal error. Details: {ex.Message}");
             }
         }
 
