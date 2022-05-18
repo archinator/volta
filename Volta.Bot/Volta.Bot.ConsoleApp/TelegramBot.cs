@@ -70,7 +70,7 @@ namespace Volta.Bot.ConsoleApp
         {
             if (update.Message is Message message)
             {
-                if (message.ForwardFrom != null) return;
+                //if (message.ForwardFrom != null) return;
 
                 _logger.LogInformation($"User {message.GetFromFullName()} initiated message {message.MessageId}");
                 var resourceHandler = GetResourceHandlerByMessageType(message);
